@@ -1,4 +1,4 @@
-package br.unb.cic.opencv;
+package br.unb.cic.opencv.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -9,15 +9,11 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import br.unb.cic.opencv.R;
 
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.Core.addWeighted;
@@ -28,13 +24,13 @@ import static org.opencv.imgproc.Imgproc.GaussianBlur;
 import static org.opencv.imgproc.Imgproc.Sobel;
 import static org.opencv.imgproc.Imgproc.cvtColor;
 
-public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class RealTimeProcessActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
     private CameraBridgeViewBase cameraBridgeViewBase;
 
     private Mat mat1, mat2, mat3;
 
-    private static String activityName = MainActivity.class.getSimpleName();
+    private static String activityName = RealTimeProcessActivity.class.getSimpleName();
 
     private BaseLoaderCallback baseLoaderCallback;
 
@@ -46,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_real_time_process);
 
         cameraBridgeViewBase = (JavaCameraView) findViewById(R.id.myCameraView);
         cameraBridgeViewBase.setVisibility(SurfaceView.VISIBLE);
