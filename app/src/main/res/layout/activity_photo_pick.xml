@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ImageView
+    <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="100dp"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
+        android:layout_marginBottom="100dp" />
 
     <Button
         android:id="@+id/galeria"
@@ -21,7 +19,7 @@
         android:layout_alignParentBottom="true"
         android:onClick="openGallery"
         android:layout_margin="@dimen/defaultMargin"
-        android:text="Galeria" />
+        android:text="@string/galeriaLabel" />
 
     <Button
         android:id="@+id/aplicar"
@@ -32,7 +30,7 @@
         android:layout_alignParentEnd="true"
         android:onClick="apply"
         android:layout_margin="@dimen/defaultMargin"
-        android:text="Aplicar"/>
+        android:text="@string/aplicarLabel"/>
 
 
 </RelativeLayout>

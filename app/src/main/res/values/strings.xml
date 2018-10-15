@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">OpenCV</string>
+    <string name="galeriaLabel">Galeria</string>
+    <string name="aplicarLabel">Aplicar</string>
 </resources>
