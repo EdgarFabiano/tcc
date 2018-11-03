@@ -16,6 +16,7 @@ import java.util.List;
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.CvType.CV_16S;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
+import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
 
 public class ImageProcessing {
 
@@ -71,7 +72,9 @@ public class ImageProcessing {
         Core.convertScaleAbs(grad_x, abs_grad_x);
         Core.convertScaleAbs(grad_y, abs_grad_y);
 
-        Core.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, dst);
+        Core.addWeighted(abs_grad_x, 1, abs_grad_y, 1, 0, dst);
+
+        Imgproc.threshold(dst, dst, 40, 255, Imgproc.THRESH_BINARY);
 
         return dst;
     }
@@ -89,11 +92,22 @@ public class ImageProcessing {
      * Applies the standard Hough transform in an Mat
      */
     public static Mat standardHoughTransform(Mat mat) {
-        Mat lines = new Mat(), result = new Mat();
-        Imgproc.HoughLinesP(mat, lines, 1, Math.PI / 180, 50, 100, 50);
+        Mat lines = new Mat();
+        int height = mat.height();
+        int width = mat.width();
+        int min = Math.min(width, height);
+        Imgproc.HoughLinesP(mat, lines, 1, 2 * Math.PI / 180, 50, min / 20, 50);
+
 
         List<Line> horizontals = new ArrayList<>();
         List<Line> verticals = new ArrayList<>();
+
+        Scalar cor = new Scalar(255, 0, 0);
+        int espessura = 1;
+
+        Imgproc.cvtColor(mat, mat, COLOR_GRAY2BGR);
+
+
         for (int x = 0; x < lines.rows(); x++) {
             double[] vec = lines.get(x, 0);
             double x1 = vec[0],
@@ -103,13 +117,35 @@ public class ImageProcessing {
             Point start = new Point(x1, y1);
             Point end = new Point(x2, y2);
             Line line = new Line(start, end);
+
             if (Math.abs(x1 - x2) > Math.abs(y1 - y2)) {
                 horizontals.add(line);
             } else if (Math.abs(x2 - x1) < Math.abs(y2 - y1)) {
                 verticals.add(line);
             }
 
-            Imgproc.line(mat, new Point(x1, y1), new Point(x2, y2), new Scalar(0, 0, 255), 2);
+            Imgproc.line(mat, line.start, line.end, cor, espessura);
+        }
+
+
+        return mat;
+    }
+
+    public static Mat resizeIfNecessary(Mat mat) {
+        final float FINAL_SIZE = 1280f;
+
+        int width = mat.width();
+        int height = mat.height();
+        Mat aux = new Mat();
+
+        if (width > FINAL_SIZE) {
+            float aspectRatio = width / FINAL_SIZE;
+            Imgproc.resize(mat, aux, new Size(1280, height / aspectRatio));
+            return aux;
+        } else if (height > FINAL_SIZE) {
+            float aspectRatio = height / FINAL_SIZE;
+            Imgproc.resize(mat, aux, new Size(width / aspectRatio, 1280));
+            return aux;
         }
 
         return mat;

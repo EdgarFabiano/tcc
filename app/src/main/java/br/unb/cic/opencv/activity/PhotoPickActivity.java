@@ -70,12 +70,13 @@ public class PhotoPickActivity extends AppCompatActivity {
         Utils.bitmapToMat(imageBitmap, src);
 
         MatBuilder dst = new MatBuilder(src)
+                .resizeIfNecessary()
                 .gaussian3()
                 .rgbToGray()
                 .sobel()
                 .houghTransform();
 
-        Bitmap dstBitmap = Bitmap.createBitmap(imageBitmap.getWidth(), imageBitmap.getHeight(), Bitmap.Config.RGB_565);
+        Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(dst.getMat(), dstBitmap);
 
         imageView.setImageBitmap(dstBitmap);

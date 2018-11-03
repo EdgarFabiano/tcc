@@ -4,33 +4,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.github.chrisbanes.photoview.PhotoView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="100dp" />
+  <com.github.chrisbanes.photoview.PhotoView
+      android:id="@+id/imageView"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_marginBottom="70dp" />
 
-    <Button
-        android:id="@+id/galeria"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentBottom="true"
-        android:onClick="openGallery"
-        android:layout_margin="@dimen/defaultMargin"
-        android:text="@string/galeriaLabel" />
+  <Button
+      android:id="@+id/galeria"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentStart="true"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentBottom="true"
+      android:onClick="openGallery"
+      android:layout_margin="@dimen/defaultMargin"
+      android:text="@string/galeriaLabel" />
 
-    <Button
-        android:id="@+id/aplicar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:onClick="apply"
-        android:layout_margin="@dimen/defaultMargin"
-        android:text="@string/aplicarLabel"/>
+  <Button
+      android:id="@+id/aplicar"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true"
+      android:layout_alignParentRight="true"
+      android:layout_alignParentEnd="true"
+      android:onClick="apply"
+      android:layout_margin="@dimen/defaultMargin"
+      android:text="@string/aplicarLabel"/>
 
 
 </RelativeLayout>

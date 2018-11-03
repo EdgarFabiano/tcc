@@ -38,4 +38,9 @@ public class MatBuilder {
         this.mat =  ImageProcessing.standardHoughTransform(this.mat);
         return this;
     }
+
+    public MatBuilder resizeIfNecessary() {
+        this.mat = ImageProcessing.resizeIfNecessary(this.mat);
+        return this;
+    }
 }
