@@ -58,6 +58,15 @@ public class ImageProcessing {
     }
 
     /**
+     * Converts a Mat to color
+     */
+    public static Mat convertToColor(Mat mat) {
+        Mat dst = new Mat();
+        Imgproc.cvtColor(mat, dst, COLOR_GRAY2BGR);
+        return dst;
+    }
+
+    /**
      * Applies the Sobel filter to a Mat, to get its borders
      */
     public static Mat sobelFilter(Mat mat) {
@@ -95,38 +104,52 @@ public class ImageProcessing {
         Mat lines = new Mat();
         int height = mat.height();
         int width = mat.width();
-        int min = Math.min(width, height);
-        Imgproc.HoughLinesP(mat, lines, 1, 2 * Math.PI / 180, 50, min / 20, 50);
+        int minImageDimention = Math.min(width, height);
+        Imgproc.HoughLinesP(mat, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 20, 50);
 
+        Scalar color = new Scalar(255, 0, 0);
+        int thickness = 2;
 
-        List<Line> horizontals = new ArrayList<>();
-        List<Line> verticals = new ArrayList<>();
+        mat = convertToColor(mat);
 
-        Scalar cor = new Scalar(255, 0, 0);
-        int espessura = 1;
+        List<Line> imageLines = new ArrayList<>();
 
-        Imgproc.cvtColor(mat, mat, COLOR_GRAY2BGR);
-
-
-        for (int x = 0; x < lines.rows(); x++) {
-            double[] vec = lines.get(x, 0);
-            double x1 = vec[0],
-                    y1 = vec[1],
-                    x2 = vec[2],
-                    y2 = vec[3];
+        for (int i = 0; i < lines.rows(); i++) {
+            double[] vec = lines.get(i, 0);
+            double x1 = vec[0], y1 = vec[1], x2 = vec[2], y2 = vec[3];
             Point start = new Point(x1, y1);
             Point end = new Point(x2, y2);
             Line line = new Line(start, end);
-
-            if (Math.abs(x1 - x2) > Math.abs(y1 - y2)) {
-                horizontals.add(line);
-            } else if (Math.abs(x2 - x1) < Math.abs(y2 - y1)) {
-                verticals.add(line);
-            }
-
-            Imgproc.line(mat, line.start, line.end, cor, espessura);
+            imageLines.add(line);
         }
 
+        double toleranceFactor = Math.PI / 6;
+
+        // TODO: pre processar a imagem para imendar linhas pequenas e sequenciais em uma só
+        // Estrutura de dados para quadrados. Detectá-los um por um
+
+        for (int i = 0; i < imageLines.size(); i++) {
+            Line lineI = imageLines.get(i);
+
+            for (int j = 0; j < imageLines.size(); j++) {
+                Line lineJ = imageLines.get(j);
+                if (!lineI.equals(lineJ)) {
+                    boolean isAngle90 = Math.abs(lineI.angleBetween(lineJ)) < Math.PI / 2 + toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > Math.PI / 2 - toleranceFactor;
+                    boolean isAngleEqual = Math.abs(lineI.angleBetween(lineJ)) < toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > -toleranceFactor;
+
+                    if (lineI.isNeighbour(lineJ) && isAngle90) {
+                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
+                        imageLines.remove(lineI);
+                    } else if ((lineI.distanceBetween(lineJ) > minImageDimention / 5 && isAngleEqual)) {
+                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
+                        imageLines.remove(lineI);
+                    }
+
+
+                }
+            }
+
+        }
 
         return mat;
     }
@@ -165,12 +188,4 @@ public class ImageProcessing {
         return point;
     }
 
-    private static class Line {
-        public Point start, end;
-
-        private Line(Point start, Point end) {
-            this.start = start;
-            this.end = end;
-        }
-    }
 }
