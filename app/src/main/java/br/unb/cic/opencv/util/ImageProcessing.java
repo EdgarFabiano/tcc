@@ -20,6 +20,8 @@ import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
 
 public class ImageProcessing {
 
+    private static double toleranceFactor = Math.PI / 6;
+
     private ImageProcessing() {
         throw new UnsupportedOperationException("No " + ImageProcessing.class.getSimpleName() + " instances for you!");
     }
@@ -123,35 +125,86 @@ public class ImageProcessing {
             imageLines.add(line);
         }
 
-        double toleranceFactor = Math.PI / 6;
+//        imageLines = processa(imageLines);
 
+        for (Line line : imageLines) {
+            Imgproc.arrowedLine(mat, line.start, line.end, color, thickness);
+        }
         // TODO: pre processar a imagem para imendar linhas pequenas e sequenciais em uma só
         // Estrutura de dados para quadrados. Detectá-los um por um
 
+//        for (int i = 0; i < imageLines.size(); i++) {
+//            Line lineI = imageLines.get(i);
+//
+//            for (int j = 0; j < imageLines.size(); j++) {
+//                Line lineJ = imageLines.get(j);
+//                if (!lineI.equals(lineJ)) {
+//                    boolean isAngle90 = Math.abs(lineI.angleBetween(lineJ)) < Math.PI / 2 + toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > Math.PI / 2 - toleranceFactor;
+//                    boolean isAngleEqual = Math.abs(lineI.angleBetween(lineJ)) < toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > -toleranceFactor;
+//
+//                    if (lineI.isNeighbour(lineJ) && isAngle90) {
+//                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
+//                        imageLines.remove(lineI);
+//                    } else if ((lineI.distanceBetween(lineJ) > minImageDimention / 5 && isAngleEqual)) {
+//                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
+//                        imageLines.remove(lineI);
+//                    }
+//                }
+//            }
+//
+//        }
+
+        return mat;
+    }
+
+    private static List<Line> processa(List<Line> imageLines) {
+        List<Line> aux = new ArrayList<>();
         for (int i = 0; i < imageLines.size(); i++) {
             Line lineI = imageLines.get(i);
 
             for (int j = 0; j < imageLines.size(); j++) {
                 Line lineJ = imageLines.get(j);
-                if (!lineI.equals(lineJ)) {
-                    boolean isAngle90 = Math.abs(lineI.angleBetween(lineJ)) < Math.PI / 2 + toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > Math.PI / 2 - toleranceFactor;
-                    boolean isAngleEqual = Math.abs(lineI.angleBetween(lineJ)) < toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > -toleranceFactor;
+                boolean isAngleEqual = Math.abs(lineI.angleBetween(lineJ)) < toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > -toleranceFactor;
 
-                    if (lineI.isNeighbour(lineJ) && isAngle90) {
-                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
-                        imageLines.remove(lineI);
-                    } else if ((lineI.distanceBetween(lineJ) > minImageDimention / 5 && isAngleEqual)) {
-                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
-                        imageLines.remove(lineI);
+                if (isAngleEqual && lineI.isNeighbour(lineJ)) {
+                    Point newStart, newEnd;
+                    if (lineI.isHorizontal()) {
+                        if (Math.min(lineI.start.x, lineJ.start.x) == lineI.start.x) {
+                            newStart = lineI.start;
+                        } else {
+                            newStart = lineJ.start;
+                        }
+
+                        if (Math.max(lineI.end.x, lineJ.end.x) == lineI.end.x) {
+                            newEnd = lineI.end;
+                        } else {
+                            newEnd = lineJ.end;
+                        }
+
+                    } else {
+                        if (Math.min(lineI.start.y, lineJ.start.y) == lineI.start.y) {
+                            newStart = lineI.start;
+                        } else {
+                            newStart = lineJ.start;
+                        }
+
+                        if (Math.max(lineI.end.y, lineJ.end.y) == lineI.end.y) {
+                            newEnd = lineI.end;
+                        } else {
+                            newEnd = lineJ.end;
+                        }
                     }
 
-
+                    aux.add(i, new Line(newStart, newEnd));
+                    if (i != 0) {
+                        i--;
+                    }
+                    imageLines.remove(lineI);
+                    imageLines.remove(lineJ);
                 }
             }
-
         }
-
-        return mat;
+        return aux;
     }
 
     public static Mat resizeIfNecessary(Mat mat) {

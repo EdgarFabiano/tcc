@@ -2,8 +2,6 @@ package br.unb.cic.opencv.util;
 
 import org.opencv.core.Point;
 
-import java.util.Objects;
-
 public class Line {
 
     public Point start, end;
@@ -50,6 +48,10 @@ public class Line {
 
     public boolean isNeighbour(Line line) {
         return distanceBetween(line) <= 5;
+    }
+
+    public boolean isHorizontal() {
+        return Math.abs(this.start.x - this.end.x) > Math.abs(this.start.y - this.end.y);
     }
 
     @Override
