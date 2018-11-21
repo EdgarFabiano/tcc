@@ -19,3 +19,11 @@ openCVLibrary343/build/intermediates/incremental/packageDebugResources/
 openCVLibrary343/build/intermediates/incremental/compileDebugAidl/
 
 openCVLibrary343/build/generated/source/aidl/debug/org/opencv/engine/
+
+openCVLibrary343/build/intermediates/incremental/debug-mergeJniLibs/
+
+openCVLibrary343/build/intermediates/incremental/mergeDebugJniLibFolders/
+
+openCVLibrary343/build/intermediates/incremental/mergeDebugShaders/
+
+openCVLibrary343/build/intermediates/incremental/packageDebugAssets/
