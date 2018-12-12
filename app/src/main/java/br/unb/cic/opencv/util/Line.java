@@ -15,6 +15,11 @@ public class Line {
         return Math.sqrt((end.y - start.y) * (end.y - start.y) + (end.x - start.x) * (end.x - start.x));
     }
 
+    public double theta() {
+        //atan dy/dx
+        return Math.acos(Math.abs(end.x - start.x) / size());
+    }
+
     public Point at(double x) {
         Point point = new Point();
         double m = (end.y - start.y) / (end.x - start.x);
@@ -24,9 +29,14 @@ public class Line {
     }
 
     public double angleBetween(Line line) {
-        double m1 = end.x - start.x == 0 ? Math.PI/2 : (end.y - start.y) / (end.x - start.x);
-        double m2 = line.end.x - line.start.x == 0 ? Math.PI/2 : (line.end.y - line.start.y) / (line.end.x - line.start.x);
-        return Math.atan((m2 - m1) / (1 + (m1 * m2)));
+        return theta() - line.theta();
+//        double m1 = end.x - start.x == 0 ? Math.PI/2 : (end.y - start.y) / (end.x - start.x);
+//        double m2 = line.end.x - line.start.x == 0 ? Math.PI/2 : (line.end.y - line.start.y) / (line.end.x - line.start.x);
+//        return Math.atan((m2 - m1) / (1 + (m1 * m2)));
+    }
+
+    public double angleDegBetween(Line line) {
+        return angleBetween(line) * 180 / Math.PI;
     }
 
     public double distanceBetween(Line line) {

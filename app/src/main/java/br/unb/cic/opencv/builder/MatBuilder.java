@@ -43,4 +43,14 @@ public class MatBuilder {
         this.mat = ImageProcessing.resizeIfNecessary(this.mat);
         return this;
     }
+
+    public MatBuilder secondApproach() {
+        this.mat = ImageProcessing.secondApproach(this.mat);
+        return this;
+    }
+
+    public MatBuilder thirdApproach() {
+        this.mat = ImageProcessing.thirdApproach(this.mat);
+        return this;
+    }
 }

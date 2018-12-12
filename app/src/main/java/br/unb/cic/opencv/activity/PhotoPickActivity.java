@@ -71,10 +71,11 @@ public class PhotoPickActivity extends AppCompatActivity {
 
         MatBuilder dst = new MatBuilder(src)
                 .resizeIfNecessary()
-                .gaussian3()
-                .rgbToGray()
-                .sobel()
-                .houghTransform();
+                .thirdApproach();
+//                .gaussian3()
+//                .rgbToGray()
+//                .sobel()
+//                .houghTransform(); // trocar para findContours com/sem fechamento antes
 
         Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(dst.getMat(), dstBitmap);
