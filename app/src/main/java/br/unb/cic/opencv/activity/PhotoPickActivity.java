@@ -56,6 +56,7 @@ public class PhotoPickActivity extends AppCompatActivity {
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
                 original = bitmap.copy(bitmap.getConfig(), false);
+                lines = contour = null;
             } catch (IOException e) {
                 Log.e(PhotoPickActivity.class.getSimpleName(), e.getMessage());
                 e.printStackTrace();
