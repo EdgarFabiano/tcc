@@ -6,13 +6,19 @@ import br.unb.cic.opencv.util.ImageProcessing;
 
 public class MatBuilder {
     private Mat mat;
+    private Mat original;
 
     public MatBuilder(Mat mat){
         this.mat = mat;
+        this.original = mat;
     }
 
     public Mat getMat() {
         return mat;
+    }
+
+    public Mat getOriginal() {
+        return original;
     }
 
     public MatBuilder rgbToGray(){
@@ -41,16 +47,12 @@ public class MatBuilder {
 
     public MatBuilder resizeIfNecessary() {
         this.mat = ImageProcessing.resizeIfNecessary(this.mat);
+        this.original = this.mat;
         return this;
     }
 
-    public MatBuilder secondApproach() {
-        this.mat = ImageProcessing.secondApproach(this.mat);
-        return this;
-    }
-
-    public MatBuilder thirdApproach() {
-        this.mat = ImageProcessing.thirdApproach(this.mat);
+    public MatBuilder bestApproach(Boolean lines) {
+        this.mat = ImageProcessing.bestApproach(this.mat, original, lines);
         return this;
     }
 }

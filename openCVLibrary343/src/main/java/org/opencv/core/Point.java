@@ -1,7 +1,7 @@
 package org.opencv.core;
 
 //javadoc:Point_
-public class Point {
+public class Point implements Comparable<Point> {
 
     public double x, y;
 
@@ -64,5 +64,10 @@ public class Point {
     @Override
     public String toString() {
         return "{" + x + ", " + y + "}";
+    }
+
+    @Override
+    public int compareTo(Point point) {
+        return Double.compare(point.x, this.x);
     }
 }

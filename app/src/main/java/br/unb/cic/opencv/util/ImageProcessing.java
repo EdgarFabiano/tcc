@@ -4,51 +4,33 @@ import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import static org.opencv.calib3d.Calib3d.findHomography;
 import static org.opencv.core.Core.BORDER_DEFAULT;
-import static org.opencv.core.Core.split;
+import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.CvType.CV_16S;
-import static org.opencv.core.CvType.CV_32F;
-import static org.opencv.core.CvType.CV_32FC2;
-import static org.opencv.core.CvType.CV_8UC3;
-import static org.opencv.imgproc.Imgproc.CHAIN_APPROX_SIMPLE;
+import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_MEAN_C;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
-import static org.opencv.imgproc.Imgproc.COLOR_BGR2HSV;
-import static org.opencv.imgproc.Imgproc.COLOR_BGRA2BGR;
-import static org.opencv.imgproc.Imgproc.COLOR_BGRA2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
-import static org.opencv.imgproc.Imgproc.COLOR_RGBA2RGB;
 import static org.opencv.imgproc.Imgproc.Canny;
-import static org.opencv.imgproc.Imgproc.LINE_AA;
-import static org.opencv.imgproc.Imgproc.MORPH_CLOSE;
+import static org.opencv.imgproc.Imgproc.GaussianBlur;
+import static org.opencv.imgproc.Imgproc.HoughLinesP;
 import static org.opencv.imgproc.Imgproc.MORPH_RECT;
-import static org.opencv.imgproc.Imgproc.RETR_EXTERNAL;
-import static org.opencv.imgproc.Imgproc.THRESH_BINARY_INV;
-import static org.opencv.imgproc.Imgproc.approxPolyDP;
-import static org.opencv.imgproc.Imgproc.arcLength;
-import static org.opencv.imgproc.Imgproc.bilateralFilter;
-import static org.opencv.imgproc.Imgproc.contourArea;
+import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
 import static org.opencv.imgproc.Imgproc.cvtColor;
-import static org.opencv.imgproc.Imgproc.drawContours;
-import static org.opencv.imgproc.Imgproc.findContours;
+import static org.opencv.imgproc.Imgproc.dilate;
+import static org.opencv.imgproc.Imgproc.erode;
 import static org.opencv.imgproc.Imgproc.getStructuringElement;
-import static org.opencv.imgproc.Imgproc.morphologyEx;
 import static org.opencv.imgproc.Imgproc.threshold;
-import static org.opencv.imgproc.Imgproc.warpPerspective;
 
 public class ImageProcessing {
 
@@ -69,7 +51,7 @@ public class ImageProcessing {
      */
     public static Mat gaussian3(Mat mat) {
         Mat dst = new Mat();
-        Imgproc.GaussianBlur(mat, dst, new Size(3, 3), 0, 0, BORDER_DEFAULT);
+        GaussianBlur(mat, dst, new Size(3, 3), 0, 0, BORDER_DEFAULT);
         return dst;
     }
 
@@ -78,7 +60,7 @@ public class ImageProcessing {
      */
     public static Mat gaussian(Mat mat, double size) {
         Mat dst = new Mat();
-        Imgproc.GaussianBlur(mat, dst, new Size(size, size), 0, 0, BORDER_DEFAULT);
+        GaussianBlur(mat, dst, new Size(size, size), 0, 0, BORDER_DEFAULT);
         return dst;
     }
 
@@ -139,7 +121,7 @@ public class ImageProcessing {
         int height = mat.height();
         int width = mat.width();
         int minImageDimention = Math.min(width, height);
-        Imgproc.HoughLinesP(mat, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 20, 50);
+        HoughLinesP(mat, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 20, 50);
 
         Scalar color = new Scalar(255, 0, 0);
         int thickness = 2;
@@ -157,91 +139,12 @@ public class ImageProcessing {
             imageLines.add(line);
         }
 
-        System.out.println("ANTES: " + imageLines.size());
-        imageLines = processa(imageLines);
-        System.out.println("DEPOIS: " + imageLines.size());
 
         for (Line line : imageLines) {
             Imgproc.arrowedLine(mat, line.start, line.end, color, thickness);
         }
-        // TODO: pre processar a imagem para imendar linhas pequenas e sequenciais em uma só
-        // Estrutura de dados para quadrados. Detectá-los um por um
-
-//        for (int i = 0; i < imageLines.size(); i++) {
-//            Line lineI = imageLines.get(i);
-//
-//            for (int j = 0; j < imageLines.size(); j++) {
-//                Line lineJ = imageLines.get(j);
-//                if (!lineI.equals(lineJ)) {
-//                    boolean isAngle90 = Math.abs(lineI.angleBetween(lineJ)) < Math.PI / 2 + toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > Math.PI / 2 - toleranceFactor;
-//                    boolean isAngleEqual = Math.abs(lineI.angleBetween(lineJ)) < toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > -toleranceFactor;
-//
-//                    if (lineI.isNeighbour(lineJ) && isAngle90) {
-//                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
-//                        imageLines.remove(lineI);
-//                    } else if ((lineI.distanceBetween(lineJ) > minImageDimention / 5 && isAngleEqual)) {
-//                        Imgproc.arrowedLine(mat, lineI.start, lineI.end, color, thickness);
-//                        imageLines.remove(lineI);
-//                    }
-//                }
-//            }
-//
-//        }
 
         return mat;
-    }
-
-    private static List<Line> processa(List<Line> imageLines) {
-        List<Line> aux = new ArrayList<>();
-        double toleranceFactor = Math.PI / 36;
-        for (int i = 0; i < imageLines.size(); i++) {
-            Line lineI = imageLines.get(i);
-
-            for (int j = i; j < imageLines.size(); j++) {
-                Line lineJ = imageLines.get(j);
-                //TODO diminuir fator de tolerancia
-                boolean isAngleEqual = Math.abs(lineI.angleBetween(lineJ)) < toleranceFactor && Math.abs(lineI.angleBetween(lineJ)) > -toleranceFactor;
-
-                //TODO considerar a orientação cartesiana do OpenCV
-                if (isAngleEqual && lineI.isNeighbour(lineJ)) {
-                    Point newStart, newEnd;
-                    if (lineI.isHorizontal()) {
-                        if (Math.min(lineI.start.x, lineJ.start.x) == lineI.start.x) {
-                            newStart = lineI.start;
-                        } else {
-                            newStart = lineJ.start;
-                        }
-
-                        if (Math.max(lineI.end.x, lineJ.end.x) == lineI.end.x) {
-                            newEnd = lineI.end;
-                        } else {
-                            newEnd = lineJ.end;
-                        }
-
-                    } else {
-                        if (Math.min(lineI.start.y, lineJ.start.y) == lineI.start.y) {
-                            newStart = lineI.start;
-                        } else {
-                            newStart = lineJ.start;
-                        }
-
-                        if (Math.max(lineI.end.y, lineJ.end.y) == lineI.end.y) {
-                            newEnd = lineI.end;
-                        } else {
-                            newEnd = lineJ.end;
-                        }
-                    }
-
-                    aux.add(i, new Line(newStart, newEnd));
-                    if (i != 0) {
-                        i--;
-                    }
-                    imageLines.remove(lineI);
-                    imageLines.remove(lineJ);
-                }
-            }
-        }
-        return aux;
     }
 
     public static Mat resizeIfNecessary(Mat mat) {
@@ -264,101 +167,183 @@ public class ImageProcessing {
         return mat;
     }
 
-    public static Mat secondApproach(Mat mat) {
+    public static Mat bestApproach(Mat src, Mat original, Boolean isLines) {
+        Mat out = original.clone();
+        int CV_THRESH_BINARY = 0;
 
-        double DELAY = 0.02;
-        int USE_CAM = 1;
-        int IS_FOUND = 0;
-        int MORPH = 7;
-        int CANNY = 250;
-        double _width = 600.0;
-        double _height = 420.0;
-        double _margin = 0.0;
+        Mat binaryImg = new Mat();
+        adaptiveThreshold(src, binaryImg, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 85, 10);
+        bitwise_not (binaryImg, binaryImg);
 
-        cvtColor(mat, mat, COLOR_RGBA2RGB);
-        Mat gray = mat.clone();
-        cvtColor(mat, gray, COLOR_BGRA2GRAY);
+        Mat kernel10 = getStructuringElement(MORPH_RECT, new Size(10, 10));
+        Mat kernel20 = getStructuringElement(MORPH_RECT, new Size(20, 20));
 
-        bilateralFilter(mat, gray, 1, 10, 120);
+        dilate(binaryImg, binaryImg, kernel20);
+        erode(binaryImg, binaryImg, kernel10);
 
-        Mat edges = new Mat();
-        Canny(gray, edges, 10, CANNY);
+        Mat lines = new Mat();
+        int height = src.height();
+        int width = src.width();
+        int minImageDimention = Math.min(width, height);
+        HoughLinesP(binaryImg, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 3, 100);
 
-        Mat kernel = new Mat();
-        getStructuringElement(MORPH_RECT, new Size(MORPH, MORPH));
+        List<Line> imageLines = new ArrayList<>();
 
-        Mat closed = new Mat();
-        morphologyEx(edges, closed, MORPH_CLOSE, kernel);
+        for (int i = 0; i < lines.rows(); i++) {
+            double[] vec = lines.get(i, 0);
+            double x1 = vec[0], y1 = vec[1], x2 = vec[2], y2 = vec[3];
+            Point start = new Point(x1, y1);
+            Point end = new Point(x2, y2);
+            Line line = new Line(start, end);
+            imageLines.add(line);
+        }
 
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat h = new Mat(); //hierarchy
-        findContours(closed, contours, h, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);// detecta bordas hor, vert e diag
+        List<List<Point>> corners = computeLines(imageLines, src);
 
-        Mat out = mat.clone();
+        for (int i = 0; i < corners.size(); i++) {
+            Point center = new Point(0, 0);
+            if (corners.get(i).size() < 4) continue;
+            for (int j = 0; j < corners.get(i).size(); j++) {
+                center.x += corners.get(i).get(j).x;
+                center.y += corners.get(i).get(j).y;
+            }
+            center.x *= (1. / corners.get(i).size());
+            center.y *= (1. / corners.get(i).size());
+            sortCorners(corners.get(i), center);
+        }
 
-        for (MatOfPoint cont : contours) {
-
-            if (contourArea(cont) > 5) {
-                double arc_len = arcLength(new MatOfPoint2f(cont.toArray()), true);
-                MatOfPoint2f approx = new MatOfPoint2f();
-                approxPolyDP(new MatOfPoint2f(cont.toArray()), approx, 0.1 * arc_len, true);
-
-                if (approx.size() == new Size(4, 4)) {
-                    IS_FOUND = 1;
-
-                    MatOfPoint2f pts_src = new MatOfPoint2f(approx);
-                    pts_src.convertTo(pts_src, CV_32FC2);
-
-                    MatOfPoint2f pts_dst = new MatOfPoint2f();
-                    pts_src.convertTo(pts_dst, CV_32FC2);
-                    Mat status = findHomography(pts_src, pts_dst);
-                    status.convertTo(status, CV_32FC2);
-
-                    cvtColor(out, out, COLOR_RGBA2RGB);
-//                    mat.convertTo(mat, CV_32FC2);
-                    warpPerspective(mat, out, status, new Size((int) (_width + _margin * 2), (int) (_height + _margin * 2)));
-                    drawContours(mat, contours, -1, new Scalar(255, 0, 0), 2);
+        if (!isLines) {
+            for (int i = 0; i < corners.size(); i++) {
+                List<Point> square = corners.get(i);
+                if (square.size() >= 4) {
+                    Point tl = square.get(0);
+                    Point tr = square.get(1);
+                    Point br = square.get(2);
+                    Point bl = square.get(3);
+                    int r = new Random().nextInt(256);
+                    int g = new Random().nextInt(256);
+                    int b = new Random().nextInt(256);
+                    Imgproc.line(out, tl, tr, new Scalar(r, g, b), 3);
+                    Imgproc.line(out, tl, bl, new Scalar(r, g, b), 3);
+                    Imgproc.line(out, bl, br, new Scalar(r, g, b), 3);
+                    Imgproc.line(out, br, tr, new Scalar(r, g, b), 3);
                 }
             }
-
+        } else {
+            for (Line line : imageLines) {
+                Imgproc.line(out, line.start, line.end, new Scalar(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256)), 2);
+            }
         }
 
-
-        return closed;
+        return out;
     }
 
-    public static Mat thirdApproach(Mat src) {
-        Random rng = new Random(12345);
-        int threshold = 100;
-        Mat srcGray = new Mat();
-        Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.blur(srcGray, srcGray, new Size(3, 3));
-        Mat cannyOutput = new Mat();
-        Imgproc.Canny(srcGray, cannyOutput, threshold, threshold * 2);
-        List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
-        Imgproc.findContours(cannyOutput, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-        Mat drawing = Mat.zeros(cannyOutput.size(), CvType.CV_8UC3);
-        for (int i = 0; i < contours.size(); i++) {
-            Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
-            Imgproc.drawContours(drawing, contours, i, color, 2, Core.LINE_8, hierarchy, 0, new Point());
-        }
-
-        return drawing;
-    }
-
-    protected Point computeIntersection(Line l1, Line l2) {
+    private static Point computeIntersection(Line l1, Line l2) {
         double x1 = l1.start.x, x2 = l1.end.x, y1 = l1.start.y, y2 = l1.end.y;
         double x3 = l2.start.x, x4 = l2.end.x, y3 = l2.start.y, y4 = l2.end.y;
         double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
-//         double angle = angleBetween2Lines(l1,l2);
-//        Log.e("houghline", "angle between 2 lines = " + angle);
-        Point point = new Point();
-        point.x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
-        point.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
+        if (d < 0) {
+            Point pt = new Point();
+            pt.x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
+            pt.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
 
-        return point;
+            int threshold = 10;
+            if (pt.x < Math.min(x1, x2) - threshold || pt.x > Math.max(x1, x2) + threshold || pt.y < Math.min(y1, y2) - threshold || pt.y > Math.max(y1, y2) + threshold) {
+                return new Point(-1, -1);
+            }
+            if (pt.x < Math.min(x3, x4) - threshold || pt.x > Math.max(x3, x4) + threshold || pt.y < Math.min(y3, y4) - threshold || pt.y > Math.max(y3, y4) + threshold) {
+                return new Point(-1, -1);
+            }
+            return pt;
+        } else
+            return new Point(-1, -1);
+
+    }
+
+    /**
+     * Primeiro, inicialize cada linha para estar em um grupo indefinido.
+     * Para cada linha calcule a intersecção dos dois segmentos de linha (se eles não cruzarem, ignore o ponto).
+     *      Se ambas as linhas estiverem indefinidas, crie um novo grupo delas.
+     *      Se apenas uma linha for definida em um grupo, adicione a outra linha ao grupo.
+     *      Se ambas as linhas estiverem definidas, adicione todas as linhas de um grupo ao outro grupo.
+     *      Se ambas as linhas estiverem no mesmo grupo, não faça nada
+     */
+    private static List<List<Point>> computeLines(List<Line> lines, Mat img2) {
+        int[] poly = new int[lines.size()];
+        for (int i = 0; i < lines.size(); i++) poly[i] = -1;
+
+        int curPoly = 0;
+        List<List<Point>> corners = new ArrayList<>();
+
+        for (int i = 0; i < lines.size(); i++) {
+            for (int j = i + 1; j < lines.size(); j++) {
+
+                Point pt = computeIntersection(lines.get(i), lines.get(j));
+                if (pt.x >= 0 && pt.y >= 0 && pt.x < img2.size().width && pt.y < img2.size().height) {
+
+                    if (poly[i] == -1 && poly[j] == -1) {
+                        List<Point> v = new ArrayList<>();
+
+                        v.add(pt);
+                        corners.add(v);
+                        poly[i] = curPoly;
+                        poly[j] = curPoly;
+                        curPoly++;
+                        continue;
+                    }
+                    if (poly[i] == -1 && poly[j] >= 0) {
+                        corners.get(poly[j]).add(pt);
+                        poly[i] = poly[j];
+                        continue;
+                    }
+                    if (poly[i] >= 0 && poly[j] == -1) {
+                        corners.get(poly[i]).add(pt);
+                        poly[j] = poly[i];
+                        continue;
+                    }
+                    if (poly[i] >= 0 && poly[j] >= 0) {
+                        if (poly[i] == poly[j]) {
+                            corners.get(poly[i]).add(pt);
+                            continue;
+                        }
+
+                        for (int k = 0; k < corners.get(poly[j]).size(); k++) {
+                            corners.get(poly[i]).add(corners.get(poly[j]).get(k));
+                        }
+
+                        corners.get(poly[j]).clear();
+                        poly[j] = poly[i];
+                    }
+                }
+            }
+        }
+
+        return corners;
+    }
+
+    private static void sortCorners(List<Point> corners, Point center) {
+        List<Point> top = new ArrayList<>(), bot = new ArrayList<>();
+        for (int i = 0; i < corners.size(); i++) {
+            if (corners.get(i).y < center.y)
+                top.add(corners.get(i));
+            else
+                bot.add(corners.get(i));
+        }
+
+        Collections.sort(top);
+        Collections.sort(bot);
+
+        Point tl = top.get(0);
+        Point tr = top.get(top.size() - 1);
+        Point bl = bot.get(0);
+        Point br = bot.get(bot.size() - 1);
+
+        corners.clear();
+        corners.add(tl);
+        corners.add(tr);
+        corners.add(br);
+        corners.add(bl);
     }
 
 }

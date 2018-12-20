@@ -27,7 +27,7 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     PhotoView imageView;
 
-    Bitmap imageBitmap;
+    Bitmap bitmap, original, lines, contour;
 
     static {
         checkOpenCV();
@@ -54,33 +54,63 @@ public class PhotoPickActivity extends AppCompatActivity {
             Uri imageUri = data.getData();
             imageView.setImageURI(imageUri);
             try {
-                imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                original = bitmap.copy(bitmap.getConfig(), false);
             } catch (IOException e) {
                 Log.e(PhotoPickActivity.class.getSimpleName(), e.getMessage());
                 e.printStackTrace();
             }
-            imageView.setImageBitmap(imageBitmap);
+            imageView.setImageBitmap(bitmap);
         }
     }
 
     public void apply(View v) {
-        Mat src = new Mat();
         float scale = imageView.getScale();
+        if(contour == null) {
+            Mat src = new Mat();
 
-        Utils.bitmapToMat(imageBitmap, src);
+            Utils.bitmapToMat(original, src);
 
-        MatBuilder dst = new MatBuilder(src)
-                .resizeIfNecessary()
-                .thirdApproach();
-//                .gaussian3()
-//                .rgbToGray()
-//                .sobel()
-//                .houghTransform(); // trocar para findContours com/sem fechamento antes
+            MatBuilder dst = new MatBuilder(src)
+                    .resizeIfNecessary()
+                    .gaussian3()
+                    .rgbToGray()
+                    .bestApproach(false);
 
-        Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
-        Utils.matToBitmap(dst.getMat(), dstBitmap);
+            Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
+            Utils.matToBitmap(dst.getMat(), dstBitmap);
 
-        imageView.setImageBitmap(dstBitmap);
+            contour = dstBitmap;
+        }
+
+        imageView.setImageBitmap(contour);
+        imageView.setScale(scale);
+    }
+
+    public void restore(View v) {
+        imageView.setImageBitmap(original);
+    }
+
+    public void lines(View v) {
+        float scale = imageView.getScale();
+        if (lines == null) {
+            Mat src = new Mat();
+
+            Utils.bitmapToMat(original, src);
+
+            MatBuilder dst = new MatBuilder(src)
+                    .resizeIfNecessary()
+                    .gaussian3()
+                    .rgbToGray()
+                    .bestApproach(true);
+
+            Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
+            Utils.matToBitmap(dst.getMat(), dstBitmap);
+
+            lines = dstBitmap;
+        }
+
+        imageView.setImageBitmap(lines);
         imageView.setScale(scale);
     }
 }
