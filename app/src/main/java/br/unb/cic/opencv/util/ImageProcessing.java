@@ -12,6 +12,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -173,7 +174,7 @@ public class ImageProcessing {
 
         Mat binaryImg = new Mat();
         adaptiveThreshold(src, binaryImg, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 85, 10);
-        bitwise_not (binaryImg, binaryImg);
+        bitwise_not(binaryImg, binaryImg);
 
         Mat kernel10 = getStructuringElement(MORPH_RECT, new Size(10, 10));
         Mat kernel20 = getStructuringElement(MORPH_RECT, new Size(20, 20));
@@ -185,7 +186,7 @@ public class ImageProcessing {
         int height = src.height();
         int width = src.width();
         int minImageDimention = Math.min(width, height);
-        HoughLinesP(binaryImg, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 3, 100);
+        HoughLinesP(binaryImg, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2, minImageDimention / 10);
 
         List<Line> imageLines = new ArrayList<>();
 
@@ -199,6 +200,7 @@ public class ImageProcessing {
         }
 
         List<List<Point>> corners = computeLines(imageLines, src);
+        List<Square> squares = new ArrayList<>();
 
         for (int i = 0; i < corners.size(); i++) {
             Point center = new Point(0, 0);
@@ -209,26 +211,12 @@ public class ImageProcessing {
             }
             center.x *= (1. / corners.get(i).size());
             center.y *= (1. / corners.get(i).size());
-            sortCorners(corners.get(i), center);
+            squares.add(sortCorners(corners.get(i), center));
         }
 
         if (!isLines) {
-            for (int i = 0; i < corners.size(); i++) {
-                List<Point> square = corners.get(i);
-                if (square.size() >= 4) {
-                    Point tl = square.get(0);
-                    Point tr = square.get(1);
-                    Point br = square.get(2);
-                    Point bl = square.get(3);
-                    int r = new Random().nextInt(256);
-                    int g = new Random().nextInt(256);
-                    int b = new Random().nextInt(256);
-                    Imgproc.line(out, tl, tr, new Scalar(r, g, b), 3);
-                    Imgproc.line(out, tl, bl, new Scalar(r, g, b), 3);
-                    Imgproc.line(out, bl, br, new Scalar(r, g, b), 3);
-                    Imgproc.line(out, br, tr, new Scalar(r, g, b), 3);
-                }
-            }
+            squares.sort(Comparator.comparingDouble(Square::area).reversed());
+            squares.stream().findFirst().ifPresent(square -> drawLine(out, square));
         } else {
             for (Line line : imageLines) {
                 Imgproc.line(out, line.start, line.end, new Scalar(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256)), 2);
@@ -264,10 +252,10 @@ public class ImageProcessing {
     /**
      * Primeiro, inicialize cada linha para estar em um grupo indefinido.
      * Para cada linha calcule a intersecção dos dois segmentos de linha (se eles não cruzarem, ignore o ponto).
-     *      Se ambas as linhas estiverem indefinidas, crie um novo grupo delas.
-     *      Se apenas uma linha for definida em um grupo, adicione a outra linha ao grupo.
-     *      Se ambas as linhas estiverem definidas, adicione todas as linhas de um grupo ao outro grupo.
-     *      Se ambas as linhas estiverem no mesmo grupo, não faça nada
+     * Se ambas as linhas estiverem indefinidas, crie um novo grupo delas.
+     * Se apenas uma linha for definida em um grupo, adicione a outra linha ao grupo.
+     * Se ambas as linhas estiverem definidas, adicione todas as linhas de um grupo ao outro grupo.
+     * Se ambas as linhas estiverem no mesmo grupo, não faça nada
      */
     private static List<List<Point>> computeLines(List<Line> lines, Mat img2) {
         int[] poly = new int[lines.size()];
@@ -322,7 +310,7 @@ public class ImageProcessing {
         return corners;
     }
 
-    private static void sortCorners(List<Point> corners, Point center) {
+    private static Square sortCorners(List<Point> corners, Point center) {
         List<Point> top = new ArrayList<>(), bot = new ArrayList<>();
         for (int i = 0; i < corners.size(); i++) {
             if (corners.get(i).y < center.y)
@@ -340,10 +328,19 @@ public class ImageProcessing {
         Point br = bot.get(bot.size() - 1);
 
         corners.clear();
+
         corners.add(tl);
         corners.add(tr);
         corners.add(br);
         corners.add(bl);
+        return new Square(tl, tr, bl, br);
+    }
+
+    private static void drawLine(Mat out, Square square) {
+        Imgproc.line(out, square.tl, square.tr, new Scalar(255, 0, 0), 3);
+        Imgproc.line(out, square.tl, square.bl, new Scalar(255, 0, 0), 3);
+        Imgproc.line(out, square.bl, square.br, new Scalar(255, 0, 0), 3);
+        Imgproc.line(out, square.br, square.tr, new Scalar(255, 0, 0), 3);
     }
 
 }

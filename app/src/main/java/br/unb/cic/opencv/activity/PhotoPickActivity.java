@@ -67,7 +67,7 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void apply(View v) {
         float scale = imageView.getScale();
-        if(contour == null) {
+        if(contour == null && original != null) {
             Mat src = new Mat();
 
             Utils.bitmapToMat(original, src);
@@ -94,7 +94,7 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void lines(View v) {
         float scale = imageView.getScale();
-        if (lines == null) {
+        if (lines == null && original != null) {
             Mat src = new Mat();
 
             Utils.bitmapToMat(original, src);
