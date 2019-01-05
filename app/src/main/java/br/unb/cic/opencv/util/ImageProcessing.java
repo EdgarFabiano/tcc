@@ -1,5 +1,6 @@
 package br.unb.cic.opencv.util;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
@@ -168,24 +169,30 @@ public class ImageProcessing {
         return mat;
     }
 
-    public static Mat bestApproach(Mat src, Mat original, Boolean isLines) {
-        Mat out = original.clone();
-        int CV_THRESH_BINARY = 0;
-
-        Mat binaryImg = new Mat();
-        adaptiveThreshold(src, binaryImg, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 85, 10);
-        bitwise_not(binaryImg, binaryImg);
-
+    private static void dilateErode(Mat binaryImg) {
         Mat kernel10 = getStructuringElement(MORPH_RECT, new Size(10, 10));
         Mat kernel20 = getStructuringElement(MORPH_RECT, new Size(20, 20));
 
         dilate(binaryImg, binaryImg, kernel20);
         erode(binaryImg, binaryImg, kernel10);
+    }
+
+    private static Mat binarize(Mat src) {
+        int CV_THRESH_BINARY = 0;
+        adaptiveThreshold(src, src, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 85, 10);
+        bitwise_not(src, src);
+        return src;
+    }
+
+    public static Mat bestApproach(Mat src, Mat original, Boolean isLines) {
+        Mat out = original.clone();
+
+        Mat binaryImg = binarize(src);
+
+        dilateErode(binaryImg);
 
         Mat lines = new Mat();
-        int height = src.height();
-        int width = src.width();
-        int minImageDimention = Math.min(width, height);
+        int minImageDimention = Math.min(src.width(), src.height());
         HoughLinesP(binaryImg, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2, minImageDimention / 10);
 
         List<Line> imageLines = new ArrayList<>();
@@ -214,13 +221,13 @@ public class ImageProcessing {
             squares.add(sortCorners(corners.get(i), center));
         }
 
-        if (!isLines) {
+        if (isLines) {
+            for (Line line : imageLines)
+                Imgproc.line(out, line.start, line.end, new Scalar(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256)), 2);
+
+        } else {
             squares.sort(Comparator.comparingDouble(Square::area).reversed());
             squares.stream().findFirst().ifPresent(square -> drawLine(out, square));
-        } else {
-            for (Line line : imageLines) {
-                Imgproc.line(out, line.start, line.end, new Scalar(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256)), 2);
-            }
         }
 
         return out;
