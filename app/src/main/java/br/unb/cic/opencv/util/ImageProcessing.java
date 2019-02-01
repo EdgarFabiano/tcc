@@ -5,21 +5,28 @@ import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.utils.Converters;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.CvType.CV_16S;
+import static org.opencv.core.CvType.CV_8UC3;
+import static org.opencv.core.Mat.zeros;
 import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_MEAN_C;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
@@ -28,6 +35,7 @@ import static org.opencv.imgproc.Imgproc.GaussianBlur;
 import static org.opencv.imgproc.Imgproc.HoughLinesP;
 import static org.opencv.imgproc.Imgproc.MORPH_RECT;
 import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
+import static org.opencv.imgproc.Imgproc.boundingRect;
 import static org.opencv.imgproc.Imgproc.cvtColor;
 import static org.opencv.imgproc.Imgproc.dilate;
 import static org.opencv.imgproc.Imgproc.erode;
@@ -177,23 +185,22 @@ public class ImageProcessing {
         erode(binaryImg, binaryImg, kernel10);
     }
 
-    private static Mat binarize(Mat src) {
+    private static void binarize(Mat src) {
         int CV_THRESH_BINARY = 0;
         adaptiveThreshold(src, src, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 85, 10);
         bitwise_not(src, src);
-        return src;
     }
 
     public static Mat bestApproach(Mat src, Mat original, Boolean isLines) {
         Mat out = original.clone();
 
-        Mat binaryImg = binarize(src);
+        binarize(src);
 
-        dilateErode(binaryImg);
+        dilateErode(src);
 
         Mat lines = new Mat();
         int minImageDimention = Math.min(src.width(), src.height());
-        HoughLinesP(binaryImg, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2, minImageDimention / 10);
+        HoughLinesP(src, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2, minImageDimention / 10);
 
         List<Line> imageLines = new ArrayList<>();
 
@@ -221,16 +228,72 @@ public class ImageProcessing {
             squares.add(sortCorners(corners.get(i), center));
         }
 
+
         if (isLines) {
             for (Line line : imageLines)
                 Imgproc.line(out, line.start, line.end, new Scalar(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256)), 2);
 
         } else {
+            //Ordena o vetor de quadrados de acordo com a área
             squares.sort(Comparator.comparingDouble(Square::area).reversed());
-            squares.stream().findFirst().ifPresent(square -> drawLine(out, square));
+            Optional<Square> first = squares.stream().findFirst();
+            if (first.isPresent()) {
+                Square square = first.get();
+                drawLine(out, square);
+
+                warp(out, square);
+
+            }
+
         }
 
         return out;
+    }
+
+    private static void warp(Mat inputMat, Square square) {
+
+        List<Point> source = new ArrayList<>();
+        source.add(square.br);
+        source.add(square.bl);
+        source.add(square.tl);
+        source.add(square.tr);
+        Mat startM = Converters.vector_Point2f_to_Mat(source);
+
+        Rect r = boundingRect(new MatOfPoint(square.bl, square.br, square.tl, square.tr));
+
+        int resultWidth = r.width;
+        int resultHeight = r.height;
+
+        Point ocvPOut4 = new Point(0, 0);
+        Point ocvPOut1 = new Point(0, resultHeight);
+        Point ocvPOut2 = new Point(resultWidth, resultHeight);
+        Point ocvPOut3 = new Point(resultWidth, 0);
+
+        if (inputMat.height() > inputMat.width()) {
+//             int temp = resultWidth;
+//             resultWidth = resultHeight;
+//             resultHeight = temp;
+
+            ocvPOut3 = new Point(0, 0);
+            ocvPOut4 = new Point(0, resultHeight);
+            ocvPOut1 = new Point(resultWidth, resultHeight);
+            ocvPOut2 = new Point(resultWidth, 0);
+        }
+
+//        Mat outputMat = new Mat(resultWidth, resultHeight, CvType.CV_8UC4);
+
+        List<Point> dest = new ArrayList<>();
+        dest.add(ocvPOut1);
+        dest.add(ocvPOut2);
+        dest.add(ocvPOut3);
+        dest.add(ocvPOut4);
+
+        Mat endM = Converters.vector_Point2f_to_Mat(dest);
+
+        Mat perspectiveTransform = Imgproc.getPerspectiveTransform(startM, endM);
+
+        Imgproc.warpPerspective(inputMat, inputMat, perspectiveTransform, new Size(resultWidth, resultHeight), Imgproc.INTER_CUBIC);
+
     }
 
     private static Point computeIntersection(Line l1, Line l2) {
