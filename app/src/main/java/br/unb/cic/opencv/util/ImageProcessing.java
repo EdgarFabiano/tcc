@@ -1,11 +1,9 @@
 package br.unb.cic.opencv.util;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -25,8 +23,6 @@ import java.util.Random;
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.CvType.CV_16S;
-import static org.opencv.core.CvType.CV_8UC3;
-import static org.opencv.core.Mat.zeros;
 import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_MEAN_C;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
@@ -200,11 +196,11 @@ public class ImageProcessing {
 
         Mat lines = new Mat();
         int minImageDimention = Math.min(src.width(), src.height());
-        HoughLinesP(src, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2, minImageDimention / 10);
+        HoughLinesP(src, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2D, minImageDimention / 10D);
 
         List<Line> imageLines = new ArrayList<>();
 
-        for (int i = 0; i < lines.rows(); i++) {
+        for (int i = lines.rows() - 1; i >= 0; i--) {
             double[] vec = lines.get(i, 0);
             double x1 = vec[0], y1 = vec[1], x2 = vec[2], y2 = vec[3];
             Point start = new Point(x1, y1);
@@ -241,7 +237,7 @@ public class ImageProcessing {
                 Square square = first.get();
                 drawLine(out, square);
 
-                warp(out, square);
+                warpPerspective(out, square);
 
             }
 
@@ -250,7 +246,7 @@ public class ImageProcessing {
         return out;
     }
 
-    private static void warp(Mat inputMat, Square square) {
+    private static void warpPerspective(Mat inputMat, Square square) {
 
         List<Point> source = new ArrayList<>();
         source.add(square.br);
@@ -297,8 +293,8 @@ public class ImageProcessing {
     }
 
     private static Point computeIntersection(Line l1, Line l2) {
-        double x1 = l1.start.x, x2 = l1.end.x, y1 = l1.start.y, y2 = l1.end.y;
-        double x3 = l2.start.x, x4 = l2.end.x, y3 = l2.start.y, y4 = l2.end.y;
+        double x1 = l1.end.x, x2 = l1.start.x, y1 = l1.end.y, y2 = l1.start.y;
+        double x3 = l2.end.x, x4 = l2.start.x, y3 = l2.end.y, y4 = l2.start.y;
         double d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
         if (d < 0) {
@@ -306,7 +302,7 @@ public class ImageProcessing {
             pt.x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
             pt.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
 
-            int threshold = 10;
+            int threshold = 5;
             if (pt.x < Math.min(x1, x2) - threshold || pt.x > Math.max(x1, x2) + threshold || pt.y < Math.min(y1, y2) - threshold || pt.y > Math.max(y1, y2) + threshold) {
                 return new Point(-1, -1);
             }

@@ -15,6 +15,9 @@
         <activity android:name=".activity.RealTimeProcessActivity"/>
 
         <activity android:name=".activity.PhotoPickActivity" >
+
+        </activity>
+        <activity android:name=".paint.PaintActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
