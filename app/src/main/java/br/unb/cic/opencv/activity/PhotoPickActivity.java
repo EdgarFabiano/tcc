@@ -107,15 +107,17 @@ public class PhotoPickActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         } else {
-            Intent intent = new Intent();
+            if (bitmap != null) {
+                Intent intent = new Intent();
 
-            ContentResolver cr = getContentResolver();
-            String title = "myBitmap";
-            String description = "My bitmap created by Android-er";
-            String savedURL = MediaStore.Images.Media.insertImage(cr, contour != null ? contour : bitmap, title, description);
-            intent.putExtra("imageURL", savedURL);
-            intent.setClass(this, PaintActivity.class);
-            startActivity(intent);
+                ContentResolver cr = getContentResolver();
+                String title = "myBitmap";
+                String description = "My bitmap created by Android-er";
+                String savedURL = MediaStore.Images.Media.insertImage(cr, contour != null ? contour : bitmap, title, description);
+                intent.putExtra("imageURL", savedURL);
+                intent.setClass(this, PaintActivity.class);
+                startActivity(intent);
+            }
         }
 
     }

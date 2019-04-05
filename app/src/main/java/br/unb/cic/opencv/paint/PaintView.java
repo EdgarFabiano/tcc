@@ -60,13 +60,13 @@ public class PaintView extends View {
     }
 
     public void init(DisplayMetrics metrics, Bitmap bitmap) {
-        int height = metrics.heightPixels;
-        int width = metrics.widthPixels;
+        double height = metrics.heightPixels;
+        double width = metrics.widthPixels;
 
         if (bitmap != null) {
-            mBitmap = Bitmap.createScaledBitmap(bitmap, width, (width/bitmap.getWidth()) * bitmap.getHeight(), false);
+            mBitmap = Bitmap.createScaledBitmap(bitmap, (int)width, (int)((width/(double)bitmap.getWidth()) * bitmap.getScaledHeight(metrics)), false);
         } else {
-            mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            mBitmap = Bitmap.createBitmap((int)width, (int)height, Bitmap.Config.ARGB_8888);
         }
 
         mCanvas = new Canvas(mBitmap);

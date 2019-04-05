@@ -34,7 +34,7 @@ public class PaintActivity extends AppCompatActivity {
         try {
             bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.parse(getIntent().getExtras().getString("imageURL")));
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(e.getClass().getName(), e.getMessage(), e);
         }
         paintView.init(metrics, bitmap.copy(Bitmap.Config.ARGB_8888, true));
     }
