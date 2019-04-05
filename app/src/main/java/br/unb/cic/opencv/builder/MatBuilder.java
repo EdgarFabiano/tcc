@@ -40,19 +40,14 @@ public class MatBuilder {
         return this;
     }
 
-    public MatBuilder houghTransform() {
-        this.mat =  ImageProcessing.standardHoughTransform(this.mat);
-        return this;
-    }
-
     public MatBuilder resizeIfNecessary() {
         this.mat = ImageProcessing.resizeIfNecessary(this.mat);
         this.original = this.mat;
         return this;
     }
 
-    public MatBuilder bestApproach(Boolean lines) {
-        this.mat = ImageProcessing.bestApproach(this.mat, original, lines);
+    public MatBuilder bestApproach() {
+        this.mat = ImageProcessing.bestApproach(this.mat, original);
         return this;
     }
 }

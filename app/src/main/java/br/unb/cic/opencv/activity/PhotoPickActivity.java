@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.PermissionInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,22 +14,17 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.webkit.PermissionRequest;
-import android.widget.Toast;
 
 import com.github.chrisbanes.photoview.PhotoView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import br.unb.cic.opencv.R;
 import br.unb.cic.opencv.builder.MatBuilder;
 import br.unb.cic.opencv.paint.PaintActivity;
-import br.unb.cic.opencv.util.Constants;
 
 import static br.unb.cic.opencv.util.Constants.GALLERY_PICK_REQUEST_CODE;
 import static br.unb.cic.opencv.util.ImageProcessing.checkOpenCV;
@@ -39,7 +33,7 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     PhotoView imageView;
 
-    Bitmap bitmap, original, lines, contour;
+    Bitmap bitmap, original, contour;
 
     static {
         checkOpenCV();
@@ -51,8 +45,6 @@ public class PhotoPickActivity extends AppCompatActivity {
         setContentView(R.layout.activity_photo_pick);
 
         imageView = findViewById(R.id.imageView);
-
-
     }
 
     public void openGallery(View v) {
@@ -70,7 +62,6 @@ public class PhotoPickActivity extends AppCompatActivity {
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
                 original = bitmap.copy(bitmap.getConfig(), false);
-                lines = contour = null;
             } catch (IOException e) {
                 Log.e(PhotoPickActivity.class.getSimpleName(), e.getMessage());
                 e.printStackTrace();
@@ -90,7 +81,7 @@ public class PhotoPickActivity extends AppCompatActivity {
                     .resizeIfNecessary()
                     .gaussian3()
                     .rgbToGray()
-                    .bestApproach(false);
+                    .bestApproach();
 
             Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
             Utils.matToBitmap(dst.getMat(), dstBitmap);
@@ -122,26 +113,4 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     }
 
-    public void lines(View v) {
-        float scale = imageView.getScale();
-        if (lines == null && original != null) {
-            Mat src = new Mat();
-
-            Utils.bitmapToMat(original, src);
-
-            MatBuilder dst = new MatBuilder(src)
-                    .resizeIfNecessary()
-                    .gaussian3()
-                    .rgbToGray()
-                    .bestApproach(true);
-
-            Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
-            Utils.matToBitmap(dst.getMat(), dstBitmap);
-
-            lines = dstBitmap;
-        }
-
-        imageView.setImageBitmap(lines);
-        imageView.setScale(scale);
-    }
 }

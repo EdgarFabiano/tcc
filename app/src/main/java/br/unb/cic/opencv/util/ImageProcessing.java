@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.Core.bitwise_not;
@@ -39,8 +38,6 @@ import static org.opencv.imgproc.Imgproc.getStructuringElement;
 import static org.opencv.imgproc.Imgproc.threshold;
 
 public class ImageProcessing {
-
-    private static double toleranceFactor = Math.PI / 6;
 
     private ImageProcessing() {
         throw new UnsupportedOperationException("No " + ImageProcessing.class.getSimpleName() + " instances for you!");
@@ -119,40 +116,6 @@ public class ImageProcessing {
         return dst;
     }
 
-    /**
-     * Applies the standard Hough transform in an Mat
-     */
-    public static Mat standardHoughTransform(Mat mat) {
-        Mat lines = new Mat();
-        int height = mat.height();
-        int width = mat.width();
-        int minImageDimention = Math.min(width, height);
-        HoughLinesP(mat, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 20, 50);
-
-        Scalar color = new Scalar(255, 0, 0);
-        int thickness = 2;
-
-        mat = convertToColor(mat);
-
-        List<Line> imageLines = new ArrayList<>();
-
-        for (int i = 0; i < lines.rows(); i++) {
-            double[] vec = lines.get(i, 0);
-            double x1 = vec[0], y1 = vec[1], x2 = vec[2], y2 = vec[3];
-            Point start = new Point(x1, y1);
-            Point end = new Point(x2, y2);
-            Line line = new Line(start, end);
-            imageLines.add(line);
-        }
-
-
-        for (Line line : imageLines) {
-            Imgproc.arrowedLine(mat, line.start, line.end, color, thickness);
-        }
-
-        return mat;
-    }
-
     public static Mat resizeIfNecessary(Mat mat) {
         final float FINAL_SIZE = 1280f;
 
@@ -187,7 +150,7 @@ public class ImageProcessing {
         bitwise_not(src, src);
     }
 
-    public static Mat bestApproach(Mat src, Mat original, Boolean isLines) {
+    public static Mat bestApproach(Mat src, Mat original) {
         Mat out = original.clone();
 
         binarize(src);
@@ -224,22 +187,13 @@ public class ImageProcessing {
             squares.add(sortCorners(corners.get(i), center));
         }
 
+        squares.sort(Comparator.comparingDouble(Square::area).reversed());
+        Optional<Square> first = squares.stream().findFirst();
+        if (first.isPresent()) {
+            Square square = first.get();
+//            drawLine(out, square);
 
-        if (isLines) {
-            for (Line line : imageLines)
-                Imgproc.line(out, line.start, line.end, new Scalar(new Random().nextInt(256), new Random().nextInt(256), new Random().nextInt(256)), 2);
-
-        } else {
-            //Ordena o vetor de quadrados de acordo com a área
-            squares.sort(Comparator.comparingDouble(Square::area).reversed());
-            Optional<Square> first = squares.stream().findFirst();
-            if (first.isPresent()) {
-                Square square = first.get();
-                drawLine(out, square);
-
-                warpPerspective(out, square);
-
-            }
+            warpPerspective(out, square);
 
         }
 
@@ -266,17 +220,12 @@ public class ImageProcessing {
         Point ocvPOut3 = new Point(resultWidth, 0);
 
         if (inputMat.height() > inputMat.width()) {
-//             int temp = resultWidth;
-//             resultWidth = resultHeight;
-//             resultHeight = temp;
 
             ocvPOut3 = new Point(0, 0);
             ocvPOut4 = new Point(0, resultHeight);
             ocvPOut1 = new Point(resultWidth, resultHeight);
             ocvPOut2 = new Point(resultWidth, 0);
         }
-
-//        Mat outputMat = new Mat(resultWidth, resultHeight, CvType.CV_8UC4);
 
         List<Point> dest = new ArrayList<>();
         dest.add(ocvPOut1);

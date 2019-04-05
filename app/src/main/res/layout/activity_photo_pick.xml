@@ -4,45 +4,38 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-  <com.github.chrisbanes.photoview.PhotoView
-      android:id="@+id/imageView"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:layout_marginBottom="70dp" />
+    <com.github.chrisbanes.photoview.PhotoView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="70dp" />
 
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="horizontal"
-      android:layout_alignParentBottom="true">
-
-    <Button
-        android:id="@+id/galeria"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="openGallery"
-        android:text="Gallery" />
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/linhas"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="lines"
-        android:text="Lines"/>
+        <Button
+            android:id="@+id/galeria"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="openGallery"
+            android:text="Gallery" />
 
-      <Button
-          android:id="@+id/restaurar"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:onClick="inpaint"
-          android:text="Inpaint"/>
+        <Button
+            android:id="@+id/aplicar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="apply"
+            android:text="Contour" />
 
-    <Button
-        android:id="@+id/aplicar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="apply"
-        android:text="Contour"/>
-  </LinearLayout>
+        <Button
+            android:id="@+id/inpaint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="inpaint"
+            android:text="Inpaint" />
+    </LinearLayout>
 
 </RelativeLayout>
