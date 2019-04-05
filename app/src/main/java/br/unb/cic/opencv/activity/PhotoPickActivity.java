@@ -1,24 +1,36 @@
 package br.unb.cic.opencv.activity;
 
+import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.webkit.PermissionRequest;
+import android.widget.Toast;
 
 import com.github.chrisbanes.photoview.PhotoView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import br.unb.cic.opencv.R;
 import br.unb.cic.opencv.builder.MatBuilder;
+import br.unb.cic.opencv.paint.PaintActivity;
+import br.unb.cic.opencv.util.Constants;
 
 import static br.unb.cic.opencv.util.Constants.GALLERY_PICK_REQUEST_CODE;
 import static br.unb.cic.opencv.util.ImageProcessing.checkOpenCV;
@@ -39,6 +51,8 @@ public class PhotoPickActivity extends AppCompatActivity {
         setContentView(R.layout.activity_photo_pick);
 
         imageView = findViewById(R.id.imageView);
+
+
     }
 
     public void openGallery(View v) {
@@ -88,8 +102,22 @@ public class PhotoPickActivity extends AppCompatActivity {
         imageView.setScale(scale);
     }
 
-    public void restore(View v) {
-        imageView.setImageBitmap(original);
+    public void inpaint(View v) {
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+        } else {
+            Intent intent = new Intent();
+
+            ContentResolver cr = getContentResolver();
+            String title = "myBitmap";
+            String description = "My bitmap created by Android-er";
+            String savedURL = MediaStore.Images.Media.insertImage(cr, contour != null ? contour : bitmap, title, description);
+            intent.putExtra("imageURL", savedURL);
+            intent.setClass(this, PaintActivity.class);
+            startActivity(intent);
+        }
+
     }
 
     public void lines(View v) {

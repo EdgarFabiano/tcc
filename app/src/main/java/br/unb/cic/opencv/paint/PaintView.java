@@ -48,6 +48,7 @@ public class PaintView extends View {
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
         mPaint.setColor(DEFAULT_COLOR);
+        mPaint.setAlpha(10);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
@@ -58,11 +59,16 @@ public class PaintView extends View {
         mBlur = new BlurMaskFilter(5, BlurMaskFilter.Blur.NORMAL);
     }
 
-    public void init(DisplayMetrics metrics) {
+    public void init(DisplayMetrics metrics, Bitmap bitmap) {
         int height = metrics.heightPixels;
         int width = metrics.widthPixels;
 
-        mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        if (bitmap != null) {
+            mBitmap = Bitmap.createScaledBitmap(bitmap, width, (width/bitmap.getWidth()) * bitmap.getHeight(), false);
+        } else {
+            mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        }
+
         mCanvas = new Canvas(mBitmap);
 
         currentColor = DEFAULT_COLOR;
@@ -94,7 +100,7 @@ public class PaintView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.save();
-        mCanvas.drawColor(backgroundColor);
+//        mCanvas.drawColor(backgroundColor, PorterDuff.Mode.ADD);
 
         for (FingerPath fp : paths) {
             mPaint.setColor(fp.color);

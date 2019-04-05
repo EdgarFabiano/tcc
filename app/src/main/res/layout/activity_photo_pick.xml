@@ -34,8 +34,8 @@
           android:id="@+id/restaurar"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:onClick="restore"
-          android:text="Restore"/>
+          android:onClick="inpaint"
+          android:text="Inpaint"/>
 
     <Button
         android:id="@+id/aplicar"
