@@ -1,8 +1,6 @@
 package br.unb.cic.opencv.paint;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,13 +12,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import java.io.IOException;
-import java.net.URI;
 
 import br.unb.cic.opencv.R;
 
 public class PaintActivity extends AppCompatActivity {
 
     private PaintView paintView;
+
+    private Bitmap image = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,13 +29,12 @@ public class PaintActivity extends AppCompatActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        Bitmap bitmap = null;
         try {
-            bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.parse(getIntent().getExtras().getString("imageURL")));
+            image = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.parse(getIntent().getExtras().getString("imageURL")));
         } catch (IOException e) {
             Log.e(e.getClass().getName(), e.getMessage(), e);
         }
-        paintView.init(metrics, bitmap.copy(Bitmap.Config.ARGB_8888, true));
+        paintView.init(metrics, image.copy(Bitmap.Config.ARGB_8888, true));
     }
 
     @Override
@@ -49,6 +47,11 @@ public class PaintActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+            case R.id.inpaint:
+
+
+
+                return true;
             case R.id.normal:
                 paintView.normal();
                 return true;
