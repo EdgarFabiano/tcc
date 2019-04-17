@@ -50,4 +50,9 @@ public class MatBuilder {
         this.mat = ImageProcessing.bestApproach(this.mat, original);
         return this;
     }
+
+    public MatBuilder inpaint() {
+        this.mat = ImageProcessing.inpaint(this.mat);
+        return this;
+    }
 }

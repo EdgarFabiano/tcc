@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -11,6 +12,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 import org.opencv.utils.Converters;
 
 import java.util.ArrayList;
@@ -151,6 +153,7 @@ public class ImageProcessing {
     }
 
     public static Mat bestApproach(Mat src, Mat original) {
+        int minImageDimention = Math.min(src.width(), src.height());
         Mat out = original.clone();
 
         binarize(src);
@@ -158,7 +161,6 @@ public class ImageProcessing {
         dilateErode(src);
 
         Mat lines = new Mat();
-        int minImageDimention = Math.min(src.width(), src.height());
         HoughLinesP(src, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2D, minImageDimention / 10D);
 
         List<Line> imageLines = new ArrayList<>();
@@ -191,9 +193,9 @@ public class ImageProcessing {
         Optional<Square> first = squares.stream().findFirst();
         if (first.isPresent()) {
             Square square = first.get();
-//            drawLine(out, square);
+            drawLine(out, square);
 
-            warpPerspective(out, square);
+//            warpPerspective(out, square);
 
         }
 
@@ -358,4 +360,39 @@ public class ImageProcessing {
         Imgproc.line(out, square.br, square.tr, new Scalar(255, 0, 0), 3);
     }
 
+    public static Mat inpaint(Mat rgba) {
+
+        Mat frameHSV = new Mat();
+        Imgproc.cvtColor(rgba, frameHSV, Imgproc.COLOR_BGR2HSV);
+        Mat mask = new Mat();
+        Core.inRange(frameHSV, new Scalar(16, 19, 27), new Scalar(254, 254, 254), mask);
+        int maxImageDimention = Math.max(rgba.width(), rgba.height());
+        Mat kernel = getStructuringElement(MORPH_RECT, new Size(maxImageDimention / 200, maxImageDimention / 200));
+        Imgproc.erode(mask, mask, kernel);
+        Imgproc.erode(mask, mask, kernel);
+
+        if (getBlackProportion(mask) < 0.5) {
+            Core.bitwise_not(mask, mask);
+        }
+
+        Mat kernel2 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention / 100, maxImageDimention / 100));
+        Imgproc.dilate(mask, mask, kernel2);
+        Imgproc.dilate(mask, mask, kernel2);
+
+        Mat out = new Mat();
+
+        Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_RGBA2RGB);
+
+        Photo.inpaint(rgba, mask, out, 20D, Photo.INPAINT_NS);
+
+        return rgba;
+    }
+
+    private static double getBlackProportion(Mat img) {
+        int imgSize = img.rows() * img.cols();
+        int nonzero = Core.countNonZero(img);
+
+
+        return (imgSize - nonzero) / (double) (imgSize);
+    }
 }

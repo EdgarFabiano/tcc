@@ -72,7 +72,7 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void apply(View v) {
         float scale = imageView.getScale();
-        if(contour == null && original != null) {
+        if(original != null) {
             Mat src = new Mat();
 
             Utils.bitmapToMat(original, src);
@@ -95,22 +95,44 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void inpaint(View v) {
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        } else {
-            if (bitmap != null) {
-                Intent intent = new Intent();
+        float scale = imageView.getScale();
+        if (contour != null) {
 
-                ContentResolver cr = getContentResolver();
-                String title = "myBitmap";
-                String description = "My bitmap created by Android-er";
-                String savedURL = MediaStore.Images.Media.insertImage(cr, contour != null ? contour : bitmap, title, description);
-                intent.putExtra("imageURL", savedURL);
-                intent.setClass(this, PaintActivity.class);
-                startActivity(intent);
-            }
+            Mat src = new Mat();
+
+            Utils.bitmapToMat(original, src);
+
+            MatBuilder dst = new MatBuilder(src).resizeIfNecessary().inpaint();
+
+            Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
+            Utils.matToBitmap(dst.getMat(), dstBitmap);
+
+            contour = dstBitmap;
+
+            imageView.setImageBitmap(contour);
+            imageView.setScale(scale);
         }
 
     }
+
+//    public void inpaint(View v) {
+//
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+//        } else {
+//            if (bitmap != null) {
+//                Intent intent = new Intent();
+//
+//                ContentResolver cr = getContentResolver();
+//                String title = "myBitmap";
+//                String description = "My bitmap created by Android-er";
+//                String savedURL = MediaStore.Images.Media.insertImage(cr, contour != null ? contour : bitmap, title, description);
+//                intent.putExtra("imageURL", savedURL);
+//                intent.setClass(this, PaintActivity.class);
+//                startActivity(intent);
+//            }
+//        }
+//
+//    }
 
 }
