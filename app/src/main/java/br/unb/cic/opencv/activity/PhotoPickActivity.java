@@ -1,16 +1,11 @@
 package br.unb.cic.opencv.activity;
 
-import android.Manifest;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -24,7 +19,6 @@ import java.io.IOException;
 
 import br.unb.cic.opencv.R;
 import br.unb.cic.opencv.builder.MatBuilder;
-import br.unb.cic.opencv.paint.PaintActivity;
 
 import static br.unb.cic.opencv.util.Constants.GALLERY_PICK_REQUEST_CODE;
 import static br.unb.cic.opencv.util.ImageProcessing.checkOpenCV;
@@ -96,7 +90,7 @@ public class PhotoPickActivity extends AppCompatActivity {
     public void inpaint(View v) {
 
         float scale = imageView.getScale();
-        if (contour != null) {
+        if (original != null) {
 
             Mat src = new Mat();
 

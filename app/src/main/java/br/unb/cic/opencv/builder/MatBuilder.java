@@ -22,7 +22,7 @@ public class MatBuilder {
     }
 
     public MatBuilder rgbToGray(){
-        this.mat = ImageProcessing.convertToGray(this.mat);
+        ImageProcessing.convertToGray(this.mat);
         return this;
     }
 

@@ -1,5 +1,6 @@
 package br.unb.cic.opencv.util;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
@@ -72,10 +73,8 @@ public class ImageProcessing {
     /**
      * Converts a Mat to gray scale
      */
-    public static Mat convertToGray(Mat mat) {
-        Mat dst = new Mat();
-        cvtColor(mat, dst, COLOR_BGR2GRAY);
-        return dst;
+    public static void convertToGray(Mat mat) {
+        cvtColor(mat, mat, COLOR_BGR2GRAY);
     }
 
     /**
@@ -148,6 +147,11 @@ public class ImageProcessing {
 
     private static void binarize(Mat src) {
         int CV_THRESH_BINARY = 0;
+        if (src.type() != CvType.CV_8UC1) {
+//            src.create(src.rows(), src.cols(), CvType.CV_8UC1);
+            src.convertTo(src, CvType.CV_8UC1);
+            src.reshape(1);
+        }
         adaptiveThreshold(src, src, 255, ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 85, 10);
         bitwise_not(src, src);
     }
@@ -362,30 +366,51 @@ public class ImageProcessing {
 
     public static Mat inpaint(Mat rgba) {
 
-        Mat frameHSV = new Mat();
-        Imgproc.cvtColor(rgba, frameHSV, Imgproc.COLOR_BGR2HSV);
-        Mat mask = new Mat();
-        Core.inRange(frameHSV, new Scalar(16, 19, 27), new Scalar(254, 254, 254), mask);
-        int maxImageDimention = Math.max(rgba.width(), rgba.height());
-        Mat kernel = getStructuringElement(MORPH_RECT, new Size(maxImageDimention / 200, maxImageDimention / 200));
-        Imgproc.erode(mask, mask, kernel);
-        Imgproc.erode(mask, mask, kernel);
-
-        if (getBlackProportion(mask) < 0.5) {
-            Core.bitwise_not(mask, mask);
-        }
-
-        Mat kernel2 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention / 100, maxImageDimention / 100));
-        Imgproc.dilate(mask, mask, kernel2);
-        Imgproc.dilate(mask, mask, kernel2);
-
-        Mat out = new Mat();
+        Mat mask = getMaskKmeans(rgba);
 
         Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_RGBA2RGB);
 
+        Mat out = new Mat();
         Photo.inpaint(rgba, mask, out, 20D, Photo.INPAINT_NS);
 
-        return rgba;
+        return out;
+    }
+
+    @NonNull
+    private static Mat getMaskInRange(Mat rgba) {
+        Mat mHSV = new Mat();
+        Imgproc.cvtColor(rgba, mHSV, Imgproc.COLOR_BGR2HSV);
+        Mat mask = new Mat();
+        Core.inRange(mHSV, new Scalar(16, 19, 27), new Scalar(254, 254, 254), mask);
+        closeHoles(mask);
+        invertIfNecessary(mask);
+        return mask;
+    }
+
+    @NonNull
+    private static Mat getMaskKmeans(Mat rgba) {
+        Mat mask = Cluster.cluster(rgba, 2).get(0);
+        convertToGray(mask);
+        binarize(mask);
+        closeHoles(mask);
+        invertIfNecessary(mask);
+        return mask;
+    }
+
+    private static void closeHoles(Mat mask) {
+        int maxImageDimention = Math.max(mask.width(), mask.height());
+        Mat kernel = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/100, maxImageDimention/100));
+        Imgproc.erode(mask, mask, kernel);
+        Mat kernel2 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/150, maxImageDimention/150));
+        Imgproc.dilate(mask, mask, kernel2);
+        Mat kernel3 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/30, maxImageDimention/30));
+        Imgproc.dilate(mask, mask, kernel3);
+    }
+
+    private static void invertIfNecessary(Mat mask) {
+        if (getBlackProportion(mask) < 0.5) {
+            Core.bitwise_not(mask, mask);
+        }
     }
 
     private static double getBlackProportion(Mat img) {
