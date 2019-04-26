@@ -55,4 +55,9 @@ public class MatBuilder {
         this.mat = ImageProcessing.inpaint(this.mat);
         return this;
     }
+
+    public MatBuilder enhance() {
+        this.mat = ImageProcessing.enhance(this.mat);
+        return this;
+    }
 }

@@ -107,6 +107,26 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     }
 
+    public void enhance(View v) {
+
+        if (contour != null || original != null) {
+
+            Mat src = new Mat();
+
+            Utils.bitmapToMat(contour != null ? contour : original, src);
+
+            MatBuilder dst = new MatBuilder(src).resizeIfNecessary().enhance();
+
+            Bitmap dstBitmap = Bitmap.createBitmap(dst.getMat().width(), dst.getMat().height(), Bitmap.Config.RGB_565);
+            Utils.matToBitmap(dst.getMat(), dstBitmap);
+
+            contour = dstBitmap;
+
+            imageView.setImageBitmap(contour);
+        }
+
+    }
+
 //    public void inpaint(View v) {
 //
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

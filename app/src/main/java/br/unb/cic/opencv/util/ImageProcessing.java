@@ -390,14 +390,6 @@ public class ImageProcessing {
         return mask;
     }
 
-    private static void fillHoles(Mat mask) {
-        Mat holes = mask.clone();
-        Mat aux = zeros(new Size(mask.cols() + 2, mask.rows() + 2), CvType.CV_8UC1);
-        floodFill(holes, aux, new Point(0, 0), new Scalar(255));
-        Core.bitwise_not(holes, holes);
-        Core.bitwise_or(mask, holes, mask);
-    }
-
     @NonNull
     private static Mat getMaskKmeans(Mat rgba) {
         Mat mask = Cluster.cluster(rgba, 2).get(0);
@@ -407,6 +399,14 @@ public class ImageProcessing {
         invertIfNecessary(mask);
         fillHoles(mask);
         return mask;
+    }
+
+    private static void fillHoles(Mat mask) {
+        Mat holes = mask.clone();
+        Mat aux = zeros(new Size(mask.cols() + 2, mask.rows() + 2), CvType.CV_8UC1);
+        floodFill(holes, aux, new Point(0, 0), new Scalar(255));
+        Core.bitwise_not(holes, holes);
+        Core.bitwise_or(mask, holes, mask);
     }
 
     private static void closeHoles(Mat mask) {
@@ -431,5 +431,20 @@ public class ImageProcessing {
 
 
         return (imgSize - nonzero) / (double) (imgSize);
+    }
+
+    public static Mat enhance(Mat mat) {
+        cvtColor(mat, mat, Imgproc.COLOR_RGBA2RGB);
+        for (int i = 0; i < mat.cols(); i++) {
+            for (int j = 0; j < mat.rows(); j++) {
+                double[] values = mat.get(j, i);
+                values[0] = values[0] > 180 ? 255 : values[0];
+                values[1] = values[1] > 180 ? 255 : values[1];
+                values[2] = values[2] > 180 ? 255 : values[2];
+                mat.put(j, i, values);
+            }
+        }
+
+        return mat;
     }
 }
