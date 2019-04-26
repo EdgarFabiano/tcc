@@ -25,6 +25,7 @@ import java.util.Optional;
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.CvType.CV_16S;
+import static org.opencv.core.Mat.zeros;
 import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_MEAN_C;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
@@ -37,6 +38,7 @@ import static org.opencv.imgproc.Imgproc.boundingRect;
 import static org.opencv.imgproc.Imgproc.cvtColor;
 import static org.opencv.imgproc.Imgproc.dilate;
 import static org.opencv.imgproc.Imgproc.erode;
+import static org.opencv.imgproc.Imgproc.floodFill;
 import static org.opencv.imgproc.Imgproc.getStructuringElement;
 import static org.opencv.imgproc.Imgproc.threshold;
 
@@ -197,9 +199,9 @@ public class ImageProcessing {
         Optional<Square> first = squares.stream().findFirst();
         if (first.isPresent()) {
             Square square = first.get();
-            drawLine(out, square);
+//            drawLine(out, square);
 
-//            warpPerspective(out, square);
+            warpPerspective(out, square);
 
         }
 
@@ -366,12 +368,12 @@ public class ImageProcessing {
 
     public static Mat inpaint(Mat rgba) {
 
-        Mat mask = getMaskKmeans(rgba);
+        Mat mask = getMaskInRange(rgba);
 
         Imgproc.cvtColor(rgba, rgba, Imgproc.COLOR_RGBA2RGB);
 
         Mat out = new Mat();
-        Photo.inpaint(rgba, mask, out, 20D, Photo.INPAINT_NS);
+        Photo.inpaint(rgba, mask, out, 20D, Photo.INPAINT_TELEA);
 
         return out;
     }
@@ -384,7 +386,16 @@ public class ImageProcessing {
         Core.inRange(mHSV, new Scalar(16, 19, 27), new Scalar(254, 254, 254), mask);
         closeHoles(mask);
         invertIfNecessary(mask);
+        fillHoles(mask);
         return mask;
+    }
+
+    private static void fillHoles(Mat mask) {
+        Mat holes = mask.clone();
+        Mat aux = zeros(new Size(mask.cols() + 2, mask.rows() + 2), CvType.CV_8UC1);
+        floodFill(holes, aux, new Point(0, 0), new Scalar(255));
+        Core.bitwise_not(holes, holes);
+        Core.bitwise_or(mask, holes, mask);
     }
 
     @NonNull
@@ -394,6 +405,7 @@ public class ImageProcessing {
         binarize(mask);
         closeHoles(mask);
         invertIfNecessary(mask);
+        fillHoles(mask);
         return mask;
     }
 

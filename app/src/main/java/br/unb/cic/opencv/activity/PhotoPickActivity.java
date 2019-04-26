@@ -89,12 +89,11 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void inpaint(View v) {
 
-        float scale = imageView.getScale();
-        if (original != null) {
+        if (contour != null) {
 
             Mat src = new Mat();
 
-            Utils.bitmapToMat(original, src);
+            Utils.bitmapToMat(contour, src);
 
             MatBuilder dst = new MatBuilder(src).resizeIfNecessary().inpaint();
 
@@ -104,7 +103,6 @@ public class PhotoPickActivity extends AppCompatActivity {
             contour = dstBitmap;
 
             imageView.setImageBitmap(contour);
-            imageView.setScale(scale);
         }
 
     }

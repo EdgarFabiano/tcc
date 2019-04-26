@@ -1,5 +1,7 @@
 package br.unb.cic.opencv.util;
 
+import android.util.SparseIntArray;
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -33,7 +35,7 @@ public class Cluster {
             clusters.add(Mat.zeros(cutout.size(), cutout.type()));
         }
 
-        Map<Integer, Integer> counts = new HashMap<>();
+        SparseIntArray counts = new SparseIntArray();
         for(int i = 0; i < centers.rows(); i++) counts.put(i, 0);
 
         int rows = 0;
