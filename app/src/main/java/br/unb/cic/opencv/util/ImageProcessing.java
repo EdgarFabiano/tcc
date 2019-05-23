@@ -59,7 +59,7 @@ public class ImageProcessing {
      */
     public static Mat gaussian3(Mat mat) {
         Mat dst = new Mat();
-        GaussianBlur(mat, dst, new Size(3, 3), 0, 0, BORDER_DEFAULT);
+        GaussianBlur(mat, dst, new Size(9, 9), 0, 0, BORDER_DEFAULT);
         return dst;
     }
 
@@ -160,14 +160,18 @@ public class ImageProcessing {
 
     public static Mat bestApproach(Mat src, Mat original) {
         int minImageDimention = Math.min(src.width(), src.height());
+        int maxImageDimention = Math.max(src.width(), src.height());
         Mat out = original.clone();
 
         binarize(src);
 
         dilateErode(src);
 
+        Mat kernel20 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/100, maxImageDimention/100));
+        erode(src, src, kernel20);
+
         Mat lines = new Mat();
-        HoughLinesP(src, lines, 1, 2 * Math.PI / 180, 50, minImageDimention / 2D, minImageDimention / 10D);
+        HoughLinesP(src, lines, 2, 2 * Math.PI / 180, 50, minImageDimention / 2D, minImageDimention / 10D);
 
         List<Line> imageLines = new ArrayList<>();
 
@@ -178,6 +182,8 @@ public class ImageProcessing {
             Point end = new Point(x2, y2);
             Line line = new Line(start, end);
             imageLines.add(line);
+//            Imgproc.line(out, start, end, new Scalar(255, 0, 0), 3);
+
         }
 
         List<List<Point>> corners = computeLines(imageLines, src);
@@ -200,7 +206,6 @@ public class ImageProcessing {
         if (first.isPresent()) {
             Square square = first.get();
 //            drawLine(out, square);
-
             warpPerspective(out, square);
 
         }
