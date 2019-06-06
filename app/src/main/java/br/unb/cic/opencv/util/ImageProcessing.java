@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.opencv.core.Core.BORDER_DEFAULT;
 import static org.opencv.core.Core.bitwise_not;
@@ -32,6 +33,7 @@ import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
 import static org.opencv.imgproc.Imgproc.Canny;
 import static org.opencv.imgproc.Imgproc.GaussianBlur;
 import static org.opencv.imgproc.Imgproc.HoughLinesP;
+import static org.opencv.imgproc.Imgproc.MORPH_ELLIPSE;
 import static org.opencv.imgproc.Imgproc.MORPH_RECT;
 import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
 import static org.opencv.imgproc.Imgproc.boundingRect;
@@ -115,7 +117,7 @@ public class ImageProcessing {
      */
     public static Mat canny(Mat mat) {
         Mat dst = new Mat();
-        Canny(mat, dst, 50, 200, 5, true);
+        Canny(mat, dst, 100, 200, 5, true);
         return dst;
     }
 
@@ -128,11 +130,11 @@ public class ImageProcessing {
 
         if (width > FINAL_SIZE) {
             float aspectRatio = width / FINAL_SIZE;
-            Imgproc.resize(mat, aux, new Size(1280, height / aspectRatio));
+            Imgproc.resize(mat, aux, new Size(FINAL_SIZE, height / aspectRatio));
             return aux;
         } else if (height > FINAL_SIZE) {
             float aspectRatio = height / FINAL_SIZE;
-            Imgproc.resize(mat, aux, new Size(width / aspectRatio, 1280));
+            Imgproc.resize(mat, aux, new Size(width / aspectRatio, FINAL_SIZE));
             return aux;
         }
 
@@ -163,15 +165,13 @@ public class ImageProcessing {
         int maxImageDimention = Math.max(src.width(), src.height());
         Mat out = original.clone();
 
-        binarize(src);
+        Mat canny = canny(src);
 
-        dilateErode(src);
-
-        Mat kernel20 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/100, maxImageDimention/100));
-        erode(src, src, kernel20);
-
+        Mat kernel10 = getStructuringElement(MORPH_RECT, new Size(10, 10));
+        dilate(canny, canny, kernel10);
         Mat lines = new Mat();
-        HoughLinesP(src, lines, 2, 2 * Math.PI / 180, 50, minImageDimention / 2D, minImageDimention / 10D);
+        HoughLinesP(canny, lines, 2, 2 * Math.PI / 180, 50, minImageDimention / 2D, minImageDimention / 10D);
+
 
         List<Line> imageLines = new ArrayList<>();
 
@@ -181,9 +181,15 @@ public class ImageProcessing {
             Point start = new Point(x1, y1);
             Point end = new Point(x2, y2);
             Line line = new Line(start, end);
-            imageLines.add(line);
-//            Imgproc.line(out, start, end, new Scalar(255, 0, 0), 3);
 
+                imageLines.add(line);
+//            Imgproc.line(out, start, end, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 1);
+
+        }
+
+
+        for (Line line : imageLines) {
+            Imgproc.line(out, line.start, line.end, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 1);
         }
 
         List<List<Point>> corners = computeLines(imageLines, src);
@@ -205,8 +211,8 @@ public class ImageProcessing {
         Optional<Square> first = squares.stream().findFirst();
         if (first.isPresent()) {
             Square square = first.get();
-//            drawLine(out, square);
-            warpPerspective(out, square);
+            drawLine(out, square);
+//            warpPerspective(out, square);
 
         }
 
@@ -264,7 +270,7 @@ public class ImageProcessing {
             pt.x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / d;
             pt.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / d;
 
-            int threshold = 5;
+            int threshold = 0;
             if (pt.x < Math.min(x1, x2) - threshold || pt.x > Math.max(x1, x2) + threshold || pt.y < Math.min(y1, y2) - threshold || pt.y > Math.max(y1, y2) + threshold) {
                 return new Point(-1, -1);
             }
@@ -365,10 +371,11 @@ public class ImageProcessing {
     }
 
     private static void drawLine(Mat out, Square square) {
-        Imgproc.line(out, square.tl, square.tr, new Scalar(255, 0, 0), 3);
-        Imgproc.line(out, square.tl, square.bl, new Scalar(255, 0, 0), 3);
-        Imgproc.line(out, square.bl, square.br, new Scalar(255, 0, 0), 3);
-        Imgproc.line(out, square.br, square.tr, new Scalar(255, 0, 0), 3);
+        int thickness = 6;
+        Imgproc.line(out, square.tl, square.tr, new Scalar(255, 0, 0), thickness);
+        Imgproc.line(out, square.tl, square.bl, new Scalar(255, 0, 0), thickness);
+        Imgproc.line(out, square.bl, square.br, new Scalar(255, 0, 0), thickness);
+        Imgproc.line(out, square.br, square.tr, new Scalar(255, 0, 0), thickness);
     }
 
     public static Mat inpaint(Mat rgba) {
@@ -385,26 +392,29 @@ public class ImageProcessing {
 
     @NonNull
     private static Mat getMaskInRange(Mat rgba) {
-        Mat mHSV = new Mat();
-        Imgproc.cvtColor(rgba, mHSV, Imgproc.COLOR_BGR2HSV);
-        Mat mask = new Mat();
-        Core.inRange(mHSV, new Scalar(16, 19, 27), new Scalar(254, 254, 254), mask);
-        closeHoles(mask);
+        Mat mask = rgba.clone();
+        convertToGray(mask);
+        threshold(mask, mask, 206, 255, Imgproc.THRESH_BINARY);
+
         invertIfNecessary(mask);
+        closeHoles(mask);
         fillHoles(mask);
+
+        Mat kernelSmall = getStructuringElement(MORPH_ELLIPSE, new Size(5, 5));
+        dilate(mask, mask, kernelSmall);
         return mask;
     }
 
     @NonNull
     private static Mat getMaskKmeans(Mat rgba) {
-        Mat mask = Cluster.cluster(rgba, 2).get(0);
+        Mat mask = Cluster.cluster(rgba, 2).get(1);
         convertToGray(mask);
-        binarize(mask);
-        closeHoles(mask);
-        invertIfNecessary(mask);
-        fillHoles(mask);
+//        closeHoles(mask);
+//        invertIfNecessary(mask);
+//        fillHoles(mask);
         return mask;
     }
+
 
     private static void fillHoles(Mat mask) {
         Mat holes = mask.clone();
@@ -416,12 +426,10 @@ public class ImageProcessing {
 
     private static void closeHoles(Mat mask) {
         int maxImageDimention = Math.max(mask.width(), mask.height());
-        Mat kernel = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/100, maxImageDimention/100));
-        Imgproc.erode(mask, mask, kernel);
-        Mat kernel2 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/150, maxImageDimention/150));
-        Imgproc.dilate(mask, mask, kernel2);
-        Mat kernel3 = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/30, maxImageDimention/30));
-        Imgproc.dilate(mask, mask, kernel3);
+        Mat kernelBig = getStructuringElement(MORPH_RECT, new Size(maxImageDimention/50, maxImageDimention/50));
+        erode(mask, mask, kernelBig);
+        dilate(mask, mask, kernelBig);
+
     }
 
     private static void invertIfNecessary(Mat mask) {
@@ -440,12 +448,15 @@ public class ImageProcessing {
 
     public static Mat enhance(Mat mat) {
         cvtColor(mat, mat, Imgproc.COLOR_RGBA2RGB);
+        int parameter = 165;
         for (int i = 0; i < mat.cols(); i++) {
             for (int j = 0; j < mat.rows(); j++) {
                 double[] values = mat.get(j, i);
-                values[0] = values[0] > 180 ? 255 : values[0];
-                values[1] = values[1] > 180 ? 255 : values[1];
-                values[2] = values[2] > 180 ? 255 : values[2];
+                if (values[0] >= parameter && values[1] >= parameter && values[2] >= parameter) {
+                    values[0] = 255;
+                    values[1] = 255;
+                    values[2] = 255;
+                }
                 mat.put(j, i, values);
             }
         }

@@ -1,9 +1,12 @@
 package br.unb.cic.opencv.activity;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -15,7 +18,11 @@ import com.github.chrisbanes.photoview.PhotoView;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import br.unb.cic.opencv.R;
 import br.unb.cic.opencv.builder.MatBuilder;
@@ -56,6 +63,7 @@ public class PhotoPickActivity extends AppCompatActivity {
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
                 original = bitmap.copy(bitmap.getConfig(), false);
+                contour = null;
             } catch (IOException e) {
                 Log.e(PhotoPickActivity.class.getSimpleName(), e.getMessage());
                 e.printStackTrace();
@@ -66,7 +74,7 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void apply(View v) {
         float scale = imageView.getScale();
-        if(original != null) {
+        if (original != null) {
             Mat src = new Mat();
 
             Utils.bitmapToMat(original, src);
@@ -89,11 +97,11 @@ public class PhotoPickActivity extends AppCompatActivity {
 
     public void inpaint(View v) {
 
-        if (contour != null) {
+        if (contour != null || original != null) {
 
             Mat src = new Mat();
 
-            Utils.bitmapToMat(contour, src);
+            Utils.bitmapToMat(contour != null ? contour : original, src);
 
             MatBuilder dst = new MatBuilder(src).resizeIfNecessary().inpaint();
 

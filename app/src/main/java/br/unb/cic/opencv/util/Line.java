@@ -20,6 +20,10 @@ public class Line {
         return Math.acos(Math.abs(end.x - start.x) / size());
     }
 
+    public double thetaDeg() {
+        return theta() * 180 / Math.PI;
+    }
+
     public Point at(double x) {
         Point point = new Point();
         double m = (end.y - start.y) / (end.x - start.x);
