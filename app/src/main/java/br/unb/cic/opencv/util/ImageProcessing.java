@@ -188,9 +188,9 @@ public class ImageProcessing {
         }
 
 
-        for (Line line : imageLines) {
-            Imgproc.line(out, line.start, line.end, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 1);
-        }
+//        for (Line line : imageLines) {
+//            Imgproc.line(out, line.start, line.end, new Scalar(Math.random()*255, Math.random()*255, Math.random()*255), 1);
+//        }
 
         List<List<Point>> corners = computeLines(imageLines, src);
         List<Square> squares = new ArrayList<>();
@@ -211,8 +211,8 @@ public class ImageProcessing {
         Optional<Square> first = squares.stream().findFirst();
         if (first.isPresent()) {
             Square square = first.get();
-            drawLine(out, square);
-//            warpPerspective(out, square);
+//            drawLine(out, square);
+            warpPerspective(out, square);
 
         }
 
